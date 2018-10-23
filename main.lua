@@ -4,5 +4,6 @@
 --
 -----------------------------------------------------------------------------------------
 
-rect = display.newRect(0, 0, 1020, 630)
-rect:setFillColor(0.75)
+foreground = display.newImage("foreground.png")
+foreground.anchorX = 0
+foreground.anchorY = 0
