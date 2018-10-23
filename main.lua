@@ -4,6 +4,5 @@
 --
 -----------------------------------------------------------------------------------------
 
-foreground = display.newImage("foreground.png")
-foreground.anchorX = 0
-foreground.anchorY = 0
+local composer = require("composer");
+composer.gotoScene("startScreen");

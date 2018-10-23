@@ -8,7 +8,8 @@ local scene = composer.newScene()
 -- local forward references should go here
 ---------------------------------------------------------------------------------
 
-local foreground
+local startScreen
+local startText
 
 -- next scene
 local function levelEventListener( event )
@@ -17,18 +18,22 @@ local function levelEventListener( event )
       param2 = "param2"
    }
 
+   
    composer.gotoScene("level1", {effect="fade", time=500, params=myParams })
 end
 
 -- "scene:create()"
 function scene:create( event )
 	local sceneGroup = self.view
-	foreground = display.newImage("foreground.png")
-	foreground.width = 640
-	foreground.height = 320
-	foreground.anchorX = 0
-	foreground.anchorY = 0
-	sceneGroup:insert(foreground)
+	startScreen = display.newImage("startScreen1.png")
+	startText = display.newText( "START", display.contentCenterX+74, display.contentCenterY-10, native.systemFont, 28 )
+	startText:setFillColor( 1, 1, 0 )
+	startScreen.width = 640
+	startScreen.height = 320
+	startScreen.anchorX = 0
+	startScreen.anchorY = 0
+	sceneGroup:insert(startScreen)
+	sceneGroup:insert(startText)
 	-- Initialize the scene here.
 	-- Example: add display objects to "sceneGroup", add touch listeners, etc.
 end
@@ -39,6 +44,7 @@ function scene:show( event )
 	local phase = event.phase
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
+		startText:addEventListener("touch", levelEventListener)
 	elseif ( phase == "did" ) then
 		-- Called when the scene is now on screen.
 		-- Insert code here to make the scene come alive.
