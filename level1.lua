@@ -9,6 +9,8 @@ local scene = composer.newScene()
 ---------------------------------------------------------------------------------
 
 local foreground
+local launchPadLeft
+local launchPadRight
 
 -- next scene
 local function levelEventListener( event )
@@ -28,7 +30,14 @@ function scene:create( event )
 	foreground.height = 320
 	foreground.anchorX = 0
 	foreground.anchorY = 0
+
+	launchPadLeft = display.newRect(130, 280, 245, 20)
+	launchPadRight = display.newRect(442, 280, 245, 20)
+
+
 	sceneGroup:insert(foreground)
+	sceneGroup:insert(launchPadLeft)
+	sceneGroup:insert(launchPadRight)
 	-- Initialize the scene here.
 	-- Example: add display objects to "sceneGroup", add touch listeners, etc.
 end
