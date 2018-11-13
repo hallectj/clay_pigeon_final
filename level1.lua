@@ -1,5 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
+local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc_trajectory" )
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
 -- unless "composer.removeScene()" is called.
@@ -22,9 +23,6 @@ local squareHt = 10
 local squareWd = 10
 
 
-
---text:setTextColor( unpack(myColor) )
-
 local squaresBottomLeftArray;
 local squaresBottomRightArray;
 local squaresTopLeftArray;
@@ -42,8 +40,7 @@ function createSquares(orientation, length)
 		squareY = 280
 		squareX = 340
 		identifier = "bottom right"
-	elseif(orientation == "top left") then 
-		--padTopLeft = display.newRect(130, 150, 245, 20)
+	elseif(orientation == "top left") then
 		squareY = 150
 		squareX = 0
 		identifier = "top left"
@@ -66,12 +63,6 @@ function createSquares(orientation, length)
 	end
 	return squaresArry
 end
-
-
-squaresBottomLeftArray = createSquares("bottom left", 10)
-squaresBottomRightArray = createSquares("bottom right", 10)
-squaresTopLeftArray = createSquares("top left", 10)
-squaresTopRightArray = createSquares("top right", 10)
 
 -- next scene
 local function levelEventListener( event )
@@ -96,6 +87,11 @@ function scene:create( event )
 	launchPadRightBottom = display.newRect(442, 280, 245, 20)
 	padTopLeft = display.newRect(130, 150, 245, 20)
 	padTopRight = display.newRect(442, 150, 245, 20)
+
+	squaresBottomLeftArray = createSquares("bottom left", 10)
+    squaresBottomRightArray = createSquares("bottom right", 10)
+    squaresTopLeftArray = createSquares("top left", 10)
+    squaresTopRightArray = createSquares("top right", 10)
 
 	sceneGroup:insert(foreground)
 	sceneGroup:insert(launchPadLeftBottom)
