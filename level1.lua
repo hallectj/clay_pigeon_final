@@ -8,6 +8,7 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 
 -- local forward references should go here
 ---------------------------------------------------------------------------------
+local LENGTH = 10
 
 local foreground
 local launchPadLeft
@@ -27,30 +28,48 @@ local squaresBottomLeftArray;
 local squaresBottomRightArray;
 local squaresTopLeftArray;
 local squaresTopRightArray;
+
+local left_begin_point = {0, 0};
+local right_begin_point = {0, 0};
+
+local left_end_point = {0, 0};
+local right_end_point = {0, 0};
+
+
+function selectRandomPoints() 
+	local leftBottomBegin, rightBottomBegin, leftTopEnd, rightTopEnd = 0, 0, 0, 0
+	local randomSquareIndex1 = math.random(1, LENGTH)
+	local randomSquareIndex2 = math.random(1, LENGTH)
+	local randomSquareIndex3 = math.random(1, LENGTH)
+	local randomSquareIndex4 = math.random(1, LENGTH)
+	leftBottomBegin = squaresBottomLeftArray[randomSquareIndex1].xPos
+	rightBottomBegin = squaresBottomRightArray[randomSquareIndex2].xPos 
+	leftTopEnd = squaresTopLeftArray[randomSquareIndex3].xPos 
+	rightTopEnd = squaresTopRightArray[randomSquareIndex4].xPos
+
+	print(" ----------- ")
+	print(leftBottomBegin, rightBottomBegin, leftTopEnd, leftTopEnd)
+end
  
-function createSquares(orientation, length) 
+function createSquares(orientation) 
 	local blue = { 0.25, 0.25, 0.75 }
     local gray = { 0.50, 0.50, 0.50 }
 	local squaresArry, offset, squareY, squareX, identifier = {}, 20, 0, 0, "";
 	if(orientation == "bottom left") then 
 		squareY = 280
 		squareX = 0
-		identifier = "bottom left"
 	elseif(orientation == "bottom right") then 
 		squareY = 280
 		squareX = 340
-		identifier = "bottom right"
 	elseif(orientation == "top left") then
 		squareY = 150
 		squareX = 0
-		identifier = "top left"
 	elseif(orientation == "top right") then 
 		squareY = 150 
 		squareX = 340 
-		identifier = "top right"
 	end
 
-	for i = 1, length do 
+	for i = 1, LENGTH do 
 		squareX = squareX + offset
 		local square = display.newRect(squareX, squareY, squareHt, squareWd);
 		if(orientation == "top left" or orientation == "bottom right") then 
@@ -58,8 +77,10 @@ function createSquares(orientation, length)
 		elseif(orientation == "top right" or orientation == "bottom left") then 
 		  square:setFillColor(unpack(gray))
 		end
-		square.identifier = identifier
+		square.identifier = orientation
+		square.xPos = square.x 
 		table.insert(squaresArry, square)
+		print(square.identifier, square.xPos)
 	end
 	return squaresArry
 end
@@ -91,7 +112,9 @@ function scene:create( event )
 	squaresBottomLeftArray = createSquares("bottom left", 10)
     squaresBottomRightArray = createSquares("bottom right", 10)
     squaresTopLeftArray = createSquares("top left", 10)
-    squaresTopRightArray = createSquares("top right", 10)
+	squaresTopRightArray = createSquares("top right", 10)
+	
+	selectRandomPoints()
 
 	sceneGroup:insert(foreground)
 	sceneGroup:insert(launchPadLeftBottom)
