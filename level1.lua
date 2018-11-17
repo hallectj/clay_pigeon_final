@@ -11,14 +11,18 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 local LENGTH = 10
 
 local foreground
+local clayPigeon1 = nil
+local launchComplete = true 
+
+local clayPigeonIteration = 8000
+local speed = 5000
+local amountOfClayPigeons = 10
+local scaleFactor = (speed / ((amountOfClayPigeons/2) * 100)) * 100
+
 local launchPadLeft
 local launchPadRight
 local padTopLeft 
 local padTopRight
-
-local myCircle
-local circle1
-local circle2
 
 local squareHt = 10
 local squareWd = 10
@@ -29,28 +33,7 @@ local squaresBottomRightArray;
 local squaresTopLeftArray;
 local squaresTopRightArray;
 
-local left_begin_point = {0, 0};
-local right_begin_point = {0, 0};
 
-local left_end_point = {0, 0};
-local right_end_point = {0, 0};
-
-
-function selectRandomPoints() 
-	local leftBottomBegin, rightBottomBegin, leftTopEnd, rightTopEnd = 0, 0, 0, 0
-	local randomSquareIndex1 = math.random(1, LENGTH)
-	local randomSquareIndex2 = math.random(1, LENGTH)
-	local randomSquareIndex3 = math.random(1, LENGTH)
-	local randomSquareIndex4 = math.random(1, LENGTH)
-	leftBottomBegin = squaresBottomLeftArray[randomSquareIndex1].xPos
-	rightBottomBegin = squaresBottomRightArray[randomSquareIndex2].xPos 
-	leftTopEnd = squaresTopLeftArray[randomSquareIndex3].xPos 
-	rightTopEnd = squaresTopRightArray[randomSquareIndex4].xPos
-
-	print(" ----------- ")
-	print(leftBottomBegin, rightBottomBegin, leftTopEnd, leftTopEnd)
-end
- 
 function createSquares(orientation) 
 	local blue = { 0.25, 0.25, 0.75 }
     local gray = { 0.50, 0.50, 0.50 }
@@ -80,10 +63,84 @@ function createSquares(orientation)
 		square.identifier = orientation
 		square.xPos = square.x 
 		table.insert(squaresArry, square)
-		print(square.identifier, square.xPos)
 	end
 	return squaresArry
 end
+
+function selectRandomSquare(arr)
+	local len = table.getn(arr)
+    local randSquare = arr[1] 
+	for i = 1, len do  
+	  randSquare = arr[math.random(1, len)]
+	end 
+	return randSquare;
+end 
+
+
+
+
+function onTouchEvent(event) 
+  if(event.phase == "began") then 
+    print("you touched me")
+  end
+end
+	
+local function reduceScale( reduceScaleBy )
+  local scaleStart = 1.0
+  return function()
+    scaleStart = scaleStart - reduceScaleBy
+    clayPigeon1.xScale = scaleStart
+    clayPigeon1.yScale = scaleStart
+  end
+end
+	
+local function setupTransition()	 
+	clayPigeon1 = display.newCircle( 0, 0, 25 )
+	clayPigeon1.x, clayPigeon1.y = 1000, -1100
+	clayPigeon1.strokeWidth = 3
+    clayPigeon1:setStrokeColor( 0, 0, 0 )
+	clayPigeon1.name = "clay pigeon1"
+	clayPigeon1:addEventListener("touch", onTouchEvent)
+	clayPigeon1.isVisible = false
+end
+
+
+local function doTransition()
+
+	local heightArr = {60, 80, 100, 120, 140, 160, 165}
+	local randHeight = 0 
+	local len = table.getn(heightArr)
+	for i = 1, len do 
+		randHeight = heightArr[math.random(1, len)]
+	end 
+	
+	clayPigeon1.isVisible = true
+	local onCompleteCallback = function()
+	    launchComplete = true
+		clayPigeon1:removeSelf()
+		setupTransition() 
+		
+	end
+
+	if(launchComplete) then 
+		print ("clayPigeon1 launched")
+		projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(0.20), math.ceil(amountOfClayPigeons/2))
+	end 
+
+	local params = {
+		time = speed,
+		pBegin= {selectRandomSquare(squaresBottomLeftArray).x, selectRandomSquare(squaresBottomLeftArray).y},
+		pEnd= {selectRandomSquare(squaresTopRightArray).x, selectRandomSquare(squaresTopRightArray).y},
+		height= randHeight,
+		onComplete=onCompleteCallback
+	}
+	Trajectory.move( clayPigeon1, params )
+	launchComplete = false
+end
+
+local function launchFunc() 
+	timer.performWithDelay(clayPigeonIteration, doTransition, amountOfClayPigeons)
+end 
 
 -- next scene
 local function levelEventListener( event )
@@ -103,6 +160,7 @@ function scene:create( event )
 	foreground.height = 320
 	foreground.anchorX = 0
 	foreground.anchorY = 0
+	
 
 	launchPadLeftBottom = display.newRect(130, 280, 245, 20)
 	launchPadRightBottom = display.newRect(442, 280, 245, 20)
@@ -114,13 +172,14 @@ function scene:create( event )
     squaresTopLeftArray = createSquares("top left", 10)
 	squaresTopRightArray = createSquares("top right", 10)
 	
-	selectRandomPoints()
-
 	sceneGroup:insert(foreground)
 	sceneGroup:insert(launchPadLeftBottom)
 	sceneGroup:insert(launchPadRightBottom)
 	sceneGroup:insert(padTopLeft)
 	sceneGroup:insert(padTopRight)
+
+	launchFunc()
+    setupTransition()
 
 	--  Initialize the scene here.
 	-- Example: add display objects to "sceneGroup", add touch listeners, etc.
