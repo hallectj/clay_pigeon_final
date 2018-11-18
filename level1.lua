@@ -1,4 +1,5 @@
 local composer = require( "composer" )
+local physics = require ("physics")
 local scene = composer.newScene()
 local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc_trajectory" )
 ---------------------------------------------------------------------------------
@@ -11,6 +12,11 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 local LENGTH = 10
 local score = 0
 local scoreText
+
+local launcher1 
+local launcher2
+local launcherChannel	
+local launcherChannel2
 
 local sheet
 local smoke_opt
@@ -50,6 +56,7 @@ local squaresTopRightArray;
 
 local soundTable = {
 	explosionSound = audio.loadSound("explosion.wav"),
+	launcherSound = audio.loadSound("launcher.wav")
 }
 
 function createSquares(orientation) 
@@ -134,6 +141,7 @@ function onTouchEventClay1(event)
 	animSmoke:play()
 	timer.performWithDelay(400, cleanUpSmoke, 1)
 	audio.play(soundTable["explosionSound"])
+	audio.stop(launcherChannel1)
 	score = score + 10 
 	scoreText.text = "score " .. score 
 	for i = 1, table.getn(topHalfArr) do 
@@ -155,6 +163,7 @@ function onTouchEventClay2(event)
 	  animSmoke:play()
 	  timer.performWithDelay(400, cleanUpSmoke, 1)
 	  audio.play(soundTable["explosionSound"])
+	  audio.stop(launcherChannel2)
 	  score = score + 10 
 	  scoreText.text = "score " .. score 
 	  for i = 1, table.getn(topHalfArr) do 
@@ -166,8 +175,16 @@ function onTouchEventClay2(event)
   end
 	
 local function reduceScale( reduceScaleBy )
+  local count = 0 
   local scaleStart = 1.0
   return function()
+	count = count + (speed / 20)
+	print("count is " .. count)
+	print("scalefactor is ", scaleFactor)
+	if(count > scaleFactor) then 
+		audio.stop(launcherChannel1)
+		audio.stop(launcherChannel2)
+	end
     scaleStart = scaleStart - reduceScaleBy
     clayPigeon1.xScale = scaleStart
 	clayPigeon1.yScale = scaleStart
@@ -224,6 +241,12 @@ local function doTransition()
 	if(launchComplete) then 
 		print ("clayPigeon1 launched")
 		projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(0.20), math.ceil(amountOfClayPigeons/2))
+		launcher1 = audio.loadStream("launcher.wav")
+		launcher2 = audio.loadStream("launcher.wav")
+		launcherChannel1 = audio.play(launcher1, {channel = 1})
+		launcherChannel2 = audio.play(launcher2, {channel = 2})
+
+
 	end 
 
 	local params1 = {
@@ -251,6 +274,53 @@ end
 local function launchFunc() 
 	timer.performWithDelay(clayPigeonIteration, doTransition, amountOfClayPigeons)
 end 
+
+
+
+
+
+
+
+_W = display.contentWidth
+_H = display.contentHeight
+
+physics.start()
+physics.setGravity(0,0)
+
+local circle = display.newCircle(0,0,20)
+circle.name = "circle"
+circle.x = 0
+circle.y = 100
+circle.tx = 0
+circle.ty = 0
+circle:setFillColor(1,0.25, 0.60)
+physics.addBody(circle)
+circle.linearDamping = 0
+circle:applyForce(16.7,0.2,circle.x,circle.y);
+--circle.enterFrame = function(self,event)
+    --print(self.x,self.tx)
+
+    --This condition will stop the circle on touch coordinates
+    --You can change the area value, this will detect if the circles's x and y is between the circles's tx and ty
+    --If area is 0, it may not stop the circle, area = 5 is safe, change if you want to
+    --local area = 5
+    --if self.x <= self.tx + area and self.x >= self.tx - area and
+       --self.y <= self.ty + area and self.y >= self.ty - area then
+		--circle:setLinearVelocity(10, 4) --set velocity to (0,0) to fully stop the circle
+    --end
+--end
+
+
+
+--Add event listener for the monitoring the coordinates of the circle
+--Runtime:addEventListener("enterFrame",circle)
+
+
+
+
+
+
+
 
 -- next scene
 local function levelEventListener( event )
