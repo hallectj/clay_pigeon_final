@@ -1,5 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
+local widget = require("widget")
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
 -- unless "composer.removeScene()" is called.
@@ -26,14 +27,50 @@ end
 function scene:create( event )
 	local sceneGroup = self.view
 	startScreen = display.newImage("startScreen1.png")
-	startText = display.newText( "START", display.contentCenterX+74, display.contentCenterY-10, native.systemFont, 28 )
-	startText:setFillColor( 1, 1, 0 )
+	--startText = display.newText( "START", display.contentCenterX+74, display.contentCenterY-10, native.systemFont, 28 )
+	--startText:setFillColor( 1, 1, 0 )
 	startScreen.width = 640
 	startScreen.height = 320
 	startScreen.anchorX = 0
 	startScreen.anchorY = 0
+
+	local NameText = display.newText("Travis Halleck", 320, 250)
+	local NameText2 = display.newText("Jackson Lawrence", 320, 275)
+
+	NameText:setFillColor(0, 0, 0)
+	NameText2:setFillColor(0, 0, 0)
+	
+	local options = {
+		effect = "fade",
+		time = 800
+	}
+
+	local function sceneListener(event)
+        if(event.phase=="ended") then
+            composer.gotoScene("intermediate",options)
+        end
+	end
+	
+	local buttonOpts = {
+		x = display.contentCenterX+78,
+		y = display.contentCenterY-10,
+		id = "button1",
+		shape = "roundedRect",
+		width = 100,
+		height = 50,
+		label = "Start",
+		labelColor = {default={0,0,0}},
+		fillColor = {default={1,0,0,1},over={1,0,0,1}},
+		onEvent = sceneListener
+	}
+
+    local button = widget.newButton(buttonOpts)
+
+
 	sceneGroup:insert(startScreen)
-	sceneGroup:insert(startText)
+	sceneGroup:insert(button)
+	sceneGroup:insert(NameText)
+	sceneGroup:insert(NameText2)
 	-- Initialize the scene here.
 	-- Example: add display objects to "sceneGroup", add touch listeners, etc.
 end
@@ -44,7 +81,9 @@ function scene:show( event )
 	local phase = event.phase
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
-		startText:addEventListener("touch", levelEventListener)
+		stage = 1 
+		rawScore = 0 
+
 	elseif ( phase == "did" ) then
 		-- Called when the scene is now on screen.
 		-- Insert code here to make the scene come alive.

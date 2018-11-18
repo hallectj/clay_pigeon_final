@@ -9,9 +9,12 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 
 -- local forward references should go here
 ---------------------------------------------------------------------------------
+local dashboardGroup = display.newGroup()
+
 local LENGTH = 10
 local score = 0
 local scoreText
+local stageText
 
 local launcher1 
 local launcher2
@@ -120,10 +123,12 @@ function populateDashoardCircles()
 		circle2.strokeWidth = 3
 		circle2.identifier = "bottom " .. i
 		table.insert(bottomHalfArr, circle2)
+
+		dashboardGroup:insert(circle1)
+		dashboardGroup:insert(circle2)
+
 	end
 end
-
-populateDashoardCircles()
 
 
 function cleanUpSmoke()
@@ -276,44 +281,20 @@ local function launchFunc()
 end 
 
 
+function readyBoxTextFunc() 
+	physics.start()
+	physics.setGravity(0, 0)
+	
+	readyBoxText = display.newText("Get Ready Level " .. stage, 0, 0, native.systemFont, 24)
+	readyBoxText.x = 100
+	readyBoxText.y = 100
+	readyBoxText:setFillColor(0.25, 0.25, 0.10)
+	
+	physics.addBody(readyBoxText, "")
+	readyBoxText.linearDamping = 0
+	readyBoxText:applyForce(20.7,0.2,readyBoxText.x,readyBoxText.y);
+end
 
-
-
-
-
-_W = display.contentWidth
-_H = display.contentHeight
-
-physics.start()
-physics.setGravity(0,0)
-
-local circle = display.newCircle(0,0,20)
-circle.name = "circle"
-circle.x = 0
-circle.y = 100
-circle.tx = 0
-circle.ty = 0
-circle:setFillColor(1,0.25, 0.60)
-physics.addBody(circle)
-circle.linearDamping = 0
-circle:applyForce(16.7,0.2,circle.x,circle.y);
---circle.enterFrame = function(self,event)
-    --print(self.x,self.tx)
-
-    --This condition will stop the circle on touch coordinates
-    --You can change the area value, this will detect if the circles's x and y is between the circles's tx and ty
-    --If area is 0, it may not stop the circle, area = 5 is safe, change if you want to
-    --local area = 5
-    --if self.x <= self.tx + area and self.x >= self.tx - area and
-       --self.y <= self.ty + area and self.y >= self.ty - area then
-		--circle:setLinearVelocity(10, 4) --set velocity to (0,0) to fully stop the circle
-    --end
---end
-
-
-
---Add event listener for the monitoring the coordinates of the circle
---Runtime:addEventListener("enterFrame",circle)
 
 
 
@@ -371,9 +352,21 @@ function scene:create( event )
 	dashboard = display.newRect(285, 290, display.actualContentWidth-5, 50)
 	dashboard:setStrokeColor(0,0,0)
 	dashboard.strokeWidth = 3
+	dashboard:setFillColor(0.11, 0.34, 0.71)
+
+	stageText = display.newText("", 295, 290, native.systemFont, 24)
+	stageText.text = "Level " .. stage
+	stageText:setFillColor(0.30, 0.95, 0.45)
+	stageText.strokeWidth = 5 
+
+	populateDashoardCircles()
 
 	scoreText = display.newText("score: " .. score, 410, 290, native.systemFont, 24)
-	scoreText:setFillColor(1, 0, 0)
+	scoreText:setFillColor(0.10, 0.95, 0.15)
+
+	dashboardGroup:insert(dashboard)
+	dashboardGroup:insert(scoreText)
+	dashboardGroup:insert(stageText)
 
 	launchPadLeftBottom.alpha = 0.01
 	launchPadRightBottom.alpha = 0.01
@@ -406,6 +399,7 @@ function scene:show( event )
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
 	elseif ( phase == "did" ) then
+		readyBoxTextFunc()
 		-- Called when the scene is now on screen.
 		-- Insert code here to make the scene come alive.
 		-- Example: start timers, begin animation, play audio, etc.
