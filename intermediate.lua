@@ -40,7 +40,7 @@ function scene:create( event )
     -- button events and initialization
     local function handleTransitionEvent(event)
         if(event.phase=="ended") then
-            composer.gotoScene("scene3", options)
+            composer.gotoScene("level1", options)
         end
     end
 
@@ -52,8 +52,8 @@ function scene:create( event )
 
     button = widget.newButton(
 		{
-			x = 160,
-			y = 400,
+			x = display.contentCenterX,
+			y = 80,
       id = "button",
 			shape = "roundedRect",
 			width = 130,
@@ -67,8 +67,8 @@ function scene:create( event )
   
   button1 = widget.newButton(
 		{
-			x = 160,
-			y = 400,
+			x = display.contentCenterX,
+			y = 80,
       id = "button1",
 			shape = "roundedRect",
 			width = 130,
@@ -112,12 +112,14 @@ function scene:show( event )
         stageNum.text = stage
         timer.performWithDelay(3000, listener);
 
-      elseif (stage > 1 and health ~= 0 and stage < 11) then
+      elseif (stage > 1 and rawScore > advance and stage < 11) then
         intermediateText.text = "Stage  "
         stageNum.text = stage
         button.isVisible = true
+        composer.removeScene("level1")
+        
       
-      elseif (health == 0) then
+      elseif (rawScore < advance) then
         print("you lost the game")
         button.isVisible = false
         intermediateText.text = "Game Over!"
@@ -130,7 +132,6 @@ function scene:show( event )
         stageNum.text = ""
         button.isVisible = false
         button1.isVisible = true
-      
       end
 
    elseif ( phase == "did" ) then

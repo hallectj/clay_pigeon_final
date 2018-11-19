@@ -10,9 +10,10 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 -- local forward references should go here
 ---------------------------------------------------------------------------------
 local dashboardGroup = display.newGroup()
+local transition = false
+local zone
 
 local LENGTH = 10
-local score = 0
 local scoreText
 local stageText
 
@@ -37,10 +38,9 @@ local clay1ID = 0
 local clay2ID = 0
 local dashboard
 
-local clayPigeonIteration = 7000
-local speed = 4000
 local amountOfClayPigeons = 10
 local scaleFactor = (speed / ((amountOfClayPigeons/2) * 100)) * 100
+local levelExpireTimeSeconds = ((amountOfClayPigeons * clayPigeonIteration) + clayPigeonIteration) / 1000
 
 local launchPadLeft
 local launchPadRight
@@ -49,13 +49,17 @@ local padTopRight
 
 local squareHt = 10
 local squareWd = 10
-
+local textToAdvance
 
 local squaresBottomLeftArray;
 local squaresBottomRightArray;
 local squaresTopLeftArray;
 local squaresTopRightArray;
 
+local option = {
+  effect = "fade",
+  time = 1300,
+}
 
 local soundTable = {
 	explosionSound = audio.loadSound("explosion.wav"),
@@ -130,157 +134,6 @@ function populateDashoardCircles()
 	end
 end
 
-
-function cleanUpSmoke()
-	animSmoke.isVisible = false 
-end
-
-function onTouchEventClay1(event) 
-  if(event.phase == "began") then 
-	clayPigeon1.isVisible = false;
-	animSmoke = display.newSprite (sheet, smoke_seq);
-	animSmoke.isVisible = true 
-	animSmoke.x = clayPigeon1.x 
-	animSmoke.y = clayPigeon1.y
-	animSmoke:setSequence("explode")
-	animSmoke:play()
-	timer.performWithDelay(400, cleanUpSmoke, 1)
-	audio.play(soundTable["explosionSound"])
-	audio.stop(launcherChannel1)
-	score = score + 10 
-	scoreText.text = "score " .. score 
-	for i = 1, table.getn(topHalfArr) do 
-		if(topHalfArr[i].identifier == clayPigeon1.identifier) then 
-			topHalfArr[i]:setFillColor(1, 0, 0)
-		end
-	end
-  end
-end
-
-function onTouchEventClay2(event) 
-	if(event.phase == "began") then 
-	  clayPigeon2.isVisible = false;
-	  animSmoke = display.newSprite (sheet, smoke_seq);
-	  animSmoke.isVisible = true 
-	  animSmoke.x = clayPigeon2.x 
-	  animSmoke.y = clayPigeon2.y
-	  animSmoke:setSequence("explode")
-	  animSmoke:play()
-	  timer.performWithDelay(400, cleanUpSmoke, 1)
-	  audio.play(soundTable["explosionSound"])
-	  audio.stop(launcherChannel2)
-	  score = score + 10 
-	  scoreText.text = "score " .. score 
-	  for i = 1, table.getn(topHalfArr) do 
-		if(bottomHalfArr[i].identifier == clayPigeon2.identifier) then 
-			bottomHalfArr[i]:setFillColor(1, 0, 0)
-		end
-	end
-	end
-  end
-	
-local function reduceScale( reduceScaleBy )
-  local count = 0 
-  local scaleStart = 1.0
-  return function()
-	count = count + (speed / 20)
-	print("count is " .. count)
-	print("scalefactor is ", scaleFactor)
-	if(count > scaleFactor) then 
-		audio.stop(launcherChannel1)
-		audio.stop(launcherChannel2)
-	end
-    scaleStart = scaleStart - reduceScaleBy
-    clayPigeon1.xScale = scaleStart
-	clayPigeon1.yScale = scaleStart
-	clayPigeon2.xScale = scaleStart
-	clayPigeon2.yScale = scaleStart
-  end
-end
-	
-local function setupTransition()	
-	clayPigeon1 = display.newCircle( 0, 0, 25 )
-	clayPigeon1.x, clayPigeon1.y = 1000, -1100
-	clayPigeon1.strokeWidth = 3
-    clayPigeon1:setStrokeColor( 0, 0, 0 )
-	clayPigeon1.name = "clay pigeon1"
-	clayPigeon1:addEventListener("touch", onTouchEventClay1)
-	clayPigeon1.isVisible = false
-
-	clayPigeon2 = display.newCircle( 0, 0, 25 )
-	clayPigeon2.x, clayPigeon1.y = 1000, -1100
-	clayPigeon2.strokeWidth = 3
-    clayPigeon2:setStrokeColor( 0, 0, 0 )
-	clayPigeon2.name = "clay pigeon2"
-	clayPigeon2:addEventListener("touch", onTouchEventClay2)
-	clayPigeon2.isVisible = false
-
-end
-
-
-local function doTransition()
-
-	clay1ID = clay1ID + 1
-	clay2ID = clay2ID + 1
-	local heightArr = {60, 80, 100, 120, 140, 150}
-	local randHeight = 0 
-	local len = table.getn(heightArr)
-	for i = 1, len do 
-		randHeight = heightArr[math.random(1, len)]
-		randHeight2 = heightArr[math.random(1, len)]
-	end 
-	
-	clayPigeon1.isVisible = true
-	clayPigeon2.isVisible = true
-	
-	clayPigeon1.identifier = "top " .. clay1ID
-	clayPigeon2.identifier = "bottom " .. clay2ID
-
-	local onCompleteCallback = function()
-	    launchComplete = true
-		clayPigeon1:removeSelf()
-		clayPigeon2:removeSelf()
-		setupTransition() 
-	end
-
-	if(launchComplete) then 
-		print ("clayPigeon1 launched")
-		projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(0.20), math.ceil(amountOfClayPigeons/2))
-		launcher1 = audio.loadStream("launcher.wav")
-		launcher2 = audio.loadStream("launcher.wav")
-		launcherChannel1 = audio.play(launcher1, {channel = 1})
-		launcherChannel2 = audio.play(launcher2, {channel = 2})
-
-
-	end 
-
-	local params1 = {
-		time = speed,
-		pBegin= {selectRandomSquare(squaresBottomLeftArray).x, selectRandomSquare(squaresBottomLeftArray).y},
-		pEnd= {selectRandomSquare(squaresTopRightArray).x, selectRandomSquare(squaresTopRightArray).y},
-		height= randHeight,
-		onComplete=onCompleteCallback
-	}
-
-	local params2 = {
-		time = speed,
-		pBegin= {selectRandomSquare(squaresBottomRightArray).x, selectRandomSquare(squaresBottomRightArray).y},
-		pEnd= {selectRandomSquare(squaresTopLeftArray).x, selectRandomSquare(squaresTopLeftArray).y},
-		height= randHeight2,
-		onComplete=onCompleteCallback		
-	}
-
-
-	Trajectory.move( clayPigeon1, params1 )
-	Trajectory.move( clayPigeon2, params2 )
-	launchComplete = false
-end
-
-local function launchFunc() 
-	timer.performWithDelay(clayPigeonIteration, doTransition, amountOfClayPigeons)
-end 
-
-
 function readyBoxTextFunc() 
 	physics.start()
 	physics.setGravity(0, 0)
@@ -293,24 +146,6 @@ function readyBoxTextFunc()
 	physics.addBody(readyBoxText, "")
 	readyBoxText.linearDamping = 0
 	readyBoxText:applyForce(20.7,0.2,readyBoxText.x,readyBoxText.y);
-end
-
-
-
-
-
-
-
-
-
--- next scene
-local function levelEventListener( event )
-   local myParams = {
-      param1 = "param1",
-      param2 = "param2"
-   }
-
-   composer.gotoScene("level1", {effect="fade", time=500, params=myParams })
 end
 
 -- "scene:create()"
@@ -361,8 +196,13 @@ function scene:create( event )
 
 	populateDashoardCircles()
 
-	scoreText = display.newText("score: " .. score, 410, 290, native.systemFont, 24)
+	scoreText = display.newText("score: " .. _G.score, 410, 290, native.systemFont, 24)
 	scoreText:setFillColor(0.10, 0.95, 0.15)
+
+	textToAdvance = display.newText("Continue On", 0, 0, native.systemFont, 16)
+	textToAdvance.x = zone.x
+	textToAdvance.y = zone.y
+    textToAdvance.isVisible = false
 
 	dashboardGroup:insert(dashboard)
 	dashboardGroup:insert(scoreText)
@@ -383,10 +223,199 @@ function scene:create( event )
 	sceneGroup:insert(launchPadRightBottom)
 	sceneGroup:insert(padTopLeft)
 	sceneGroup:insert(padTopRight)
-	sceneGroup:insert(dashboard)
+	sceneGroup:insert(dashboard)	
+	sceneGroup:insert(dashboardGroup)
 
+	function cleanUpSmoke()
+		animSmoke.isVisible = false 
+	end
+	
+	function onTouchEventClay1(event) 
+	  if(event.phase == "began") then 
+		rawScore = rawScore + 1
+		clayPigeon1.isVisible = false;
+		animSmoke = display.newSprite (sheet, smoke_seq);
+		animSmoke.isVisible = true 
+		animSmoke.x = clayPigeon1.x 
+		animSmoke.y = clayPigeon1.y
+		animSmoke:setSequence("explode")
+		animSmoke:play()
+		timer.performWithDelay(400, cleanUpSmoke, 1)
+		audio.play(soundTable["explosionSound"])
+		audio.stop(launcherChannel1)
+		_G.score = _G.score + 10 
+		scoreText.text = "score " .. _G.score 
+		for i = 1, table.getn(topHalfArr) do 
+			if(topHalfArr[i].identifier == clayPigeon1.identifier) then 
+				topHalfArr[i]:setFillColor(1, 0, 0)
+			end
+		end
+	  end
+	end
+	
+	function onTouchEventClay2(event) 
+		if(event.phase == "began") then 
+		  rawScore = rawScore + 1
+		  clayPigeon2.isVisible = false;
+		  animSmoke = display.newSprite (sheet, smoke_seq);
+		  animSmoke.isVisible = true 
+		  animSmoke.x = clayPigeon2.x 
+		  animSmoke.y = clayPigeon2.y
+		  animSmoke:setSequence("explode")
+		  animSmoke:play()
+		  timer.performWithDelay(400, cleanUpSmoke, 1)
+		  audio.play(soundTable["explosionSound"])
+		  audio.stop(launcherChannel2)
+		  _G.score = _G.score + 10 
+		  scoreText.text = "score " .. _G.score 
+		  for i = 1, table.getn(topHalfArr) do 
+			if(bottomHalfArr[i].identifier == clayPigeon2.identifier) then 
+				bottomHalfArr[i]:setFillColor(1, 0, 0)
+			end
+		end
+		end
+	  end
+		
+	function reduceScale( reduceScaleBy )
+	  local count = 0 
+	  local scaleStart = 1.0
+	  return function()
+		count = count + (speed / 20)
+		if(count > scaleFactor) then 
+			audio.stop(launcherChannel1)
+			audio.stop(launcherChannel2)
+		end
+		scaleStart = scaleStart - reduceScaleBy
+		clayPigeon1.xScale = scaleStart
+		clayPigeon1.yScale = scaleStart
+		clayPigeon2.xScale = scaleStart
+		clayPigeon2.yScale = scaleStart
+	  end
+	end
+		
+    function setupTransition()	
+		clayPigeon1 = display.newCircle( 0, 0, 25 )
+		clayPigeon1.x, clayPigeon1.y = 1000, -1100
+		clayPigeon1.strokeWidth = 3
+		clayPigeon1:setStrokeColor( 0, 0, 0 )
+		clayPigeon1.name = "clay pigeon1"
+		clayPigeon1:addEventListener("touch", onTouchEventClay1)
+		clayPigeon1.isVisible = false
+	
+		clayPigeon2 = display.newCircle( 0, 0, 25 )
+		clayPigeon2.x, clayPigeon1.y = 1000, -1100
+		clayPigeon2.strokeWidth = 3
+		clayPigeon2:setStrokeColor( 0, 0, 0 )
+		clayPigeon2.name = "clay pigeon2"
+		clayPigeon2:addEventListener("touch", onTouchEventClay2)
+		clayPigeon2.isVisible = false
+	
+	end
+	
+	
+	function doTransition()
+	
+		clay1ID = clay1ID + 1
+		clay2ID = clay2ID + 1
+		local heightArr = {60, 80, 100, 120, 140, 150}
+		local randHeight = 0 
+		local len = table.getn(heightArr)
+		for i = 1, len do 
+			randHeight = heightArr[math.random(1, len)]
+			randHeight2 = heightArr[math.random(1, len)]
+		end 
+		
+		clayPigeon1.isVisible = true
+		clayPigeon2.isVisible = true
+		
+		clayPigeon1.identifier = "top " .. clay1ID
+		clayPigeon2.identifier = "bottom " .. clay2ID
+	
+		local onCompleteCallback = function()
+			launchComplete = true
+			clayPigeon1:removeSelf()
+			clayPigeon2:removeSelf()
+			setupTransition() 
+		end
+	
+		if(launchComplete) then 
+			--print ("clayPigeon1 launched")
+			projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(0.20), math.ceil(amountOfClayPigeons/2))
+			launcher1 = audio.loadStream("launcher.wav")
+			launcher2 = audio.loadStream("launcher.wav")
+			launcherChannel1 = audio.play(launcher1, {channel = 1})
+			launcherChannel2 = audio.play(launcher2, {channel = 2})
+	
+	
+		end 
+	
+		local params1 = {
+			time = speed,
+			pBegin= {selectRandomSquare(squaresBottomLeftArray).x, selectRandomSquare(squaresBottomLeftArray).y},
+			pEnd= {selectRandomSquare(squaresTopRightArray).x, selectRandomSquare(squaresTopRightArray).y},
+			height= randHeight,
+			onComplete=onCompleteCallback
+		}
+	
+		local params2 = {
+			time = speed,
+			pBegin= {selectRandomSquare(squaresBottomRightArray).x, selectRandomSquare(squaresBottomRightArray).y},
+			pEnd= {selectRandomSquare(squaresTopLeftArray).x, selectRandomSquare(squaresTopLeftArray).y},
+			height= randHeight2,
+			onComplete=onCompleteCallback		
+		}
+	
+	
+		Trajectory.move( clayPigeon1, params1 )
+		Trajectory.move( clayPigeon2, params2 )
+		launchComplete = false
+	end
+	
+    function launchFunc() 
+		timer.performWithDelay(clayPigeonIteration, doTransition, amountOfClayPigeons)
+	end
+
+	function timerFunc(event)
+        if (transition == true) then
+            timer.cancel( event.source )
+		end
+
+		if(levelExpireTimeSeconds == event.count) then 
+			zone.isVisible = true
+			textToAdvance.isVisible = true 
+			zone:addEventListener("tap", zoneHandler)
+		end
+
+		print(event.count)
+
+	end
+
+	theTimer = timer.performWithDelay(1000, timerFunc, levelExpireTimeSeconds)
+	
+	--determines what happens in terms of speed and what not
+	function stageDeterminer()
+		if(stage == 1) then 
+			speed = 4000
+		elseif(stage == 2) then
+			speed = 3500
+		elseif(stage == 3) then
+			speed = 3000
+		elseif(stage == 4) then
+			speed = 2500
+		elseif(stage == 5) then
+			speed = 2000
+		elseif(stage == 6) then
+			speed = 1500
+		elseif(stage == 7) then
+			speed = 1000
+		end
+	end
+
+	stageDeterminer()
+
+	readyBoxTextFunc()
 	launchFunc()
-    setupTransition()
+	setupTransition()
 
 	--  Initialize the scene here.
 	-- Example: add display objects to "sceneGroup", add touch listeners, etc.
@@ -397,12 +426,13 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	if ( phase == "will" ) then
+		stageDeterminer()
 		-- Called when the scene is still off screen (but is about to come on screen).
 	elseif ( phase == "did" ) then
-		readyBoxTextFunc()
 		-- Called when the scene is now on screen.
 		-- Insert code here to make the scene come alive.
 		-- Example: start timers, begin animation, play audio, etc.
+		transition = false
 	end
 end
 
@@ -411,10 +441,14 @@ function scene:hide( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	if ( phase == "will" ) then
+		transition = false
 		-- Called when the scene is on screen (but is about to go off screen).
 		-- Insert code here to "pause" the scene.
 		-- Example: stop timers, stop animation, stop audio, etc.
 	elseif ( phase == "did" ) then
+		if(stage == 1) then 
+			sceneGroup:insert(zone)
+		end
 		-- Called immediately after scene goes off screen.
 	end
 end
@@ -422,10 +456,55 @@ end
 -- "scene:destroy()"
 function scene:destroy( event )
 	local sceneGroup = self.view
+	textToAdvance.isVisible = false 
+	zone.isVisible = false 
+	clayPigeon1 = nil 
+	clayPigeon2 = nil 
+	rawScore = 0
+	--score = _G.score 
 	-- Called prior to the removal of scene's view ("sceneGroup").
 	-- Insert code here to clean up the scene.
 	-- Example: remove display objects, save state, etc.
 end
+
+
+zone = display.newRect (display.contentCenterX-10, display.contentCenterY-100 + 100, 140, 30);
+zone.strokeWidth = 2;
+zone:setFillColor(0,0,0);
+zone.isSensor = true;
+zone.isVisible = false
+
+function zoneHandler(event)
+	local x, y = event.target:contentToLocal(event.x, event.y); 
+	x = x + 150;
+	y = y + 100;
+	x = math.ceil(x/60);
+	y = math.ceil(y/50);
+
+	print("Stage is ", stage)
+	print("rawScore is ", rawScore)
+	print("score is", _G.score)
+	print("speed is", speed)
+
+	if (checkValid(x, y)) then
+	  return;
+	end   
+end
+
+function checkValid(x,y) 
+	local _x, _y = zone:localToContent((x*60)-180, (y*50)-125);
+	if (rawScore > advance) then
+		print("stage is ", stage)
+	  stage = stage + 1
+	  composer.gotoScene("intermediate", option)
+	  clayPigeon1.isVisible = false 
+	  clayPigeon2.isVisible = false
+   end
+	 
+	return;
+ end
+
+
 ---------------------------------------------------------------------------------
 
 -- Listener setup
@@ -433,6 +512,7 @@ scene:addEventListener( "create", scene )
 scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
+--zone:addEventListener("tap", zoneHandler)
 
 --Runtime:addEventListener( "enterFrame", tmp )
 ---------------------------------------------------------------------------------

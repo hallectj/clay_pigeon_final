@@ -11,6 +11,9 @@ local widget = require("widget")
 
 local startScreen
 local startText
+_G.score = 0 
+_G.stage = 1
+stage = _G.stage 
 
 -- next scene
 local function levelEventListener( event )
@@ -81,8 +84,11 @@ function scene:show( event )
 	local phase = event.phase
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
-		stage = 1 
 		rawScore = 0 
+		advance = 6
+		speed = 4000
+		clayPigeonIteration = 8000
+
 
 	elseif ( phase == "did" ) then
 		-- Called when the scene is now on screen.
