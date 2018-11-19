@@ -9,9 +9,7 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 
 -- local forward references should go here
 ---------------------------------------------------------------------------------
-local dashboardGroup
-local masterGroup
-
+local dashboardGroup = display.newGroup()
 local transition = false
 local zone
 
@@ -40,12 +38,10 @@ local clay1ID = 0
 local clay2ID = 0
 local dashboard
 
-local scaleTimes = 5
 local amountOfClayPigeons = 10
---local scaleFactor = (speed / ((amountOfClayPigeons/2) * 100)) * 100
-local scaleFactor = (speed / 500) * 100
-local scaleFactor2 = math.floor(speed / (speed - (speed * (5/6)))) * 100
+local scaleFactor = (speed / ((amountOfClayPigeons/2) * 100)) * 100
 local levelExpireTimeSeconds = ((amountOfClayPigeons * clayPigeonIteration) + (clayPigeonIteration - math.floor((clayPigeonIteration/2)))) / 1000
+
 
 local launchPadLeft
 local launchPadRight
@@ -101,7 +97,6 @@ function createSquares(orientation)
 		square.xPos = square.x 
 		square.alpha = 0.01;
 		table.insert(squaresArry, square)
-		masterGroup:insert(square)
 	end
 	return squaresArry
 end
@@ -157,8 +152,6 @@ end
 -- "scene:create()"
 function scene:create( event )
 	local sceneGroup = self.view
-	masterGroup = display.newGroup()
-	dashboardGroup = display.newGroup()
 
 	smoke_opt = {
 		frames = {
@@ -210,13 +203,7 @@ function scene:create( event )
 	textToAdvance = display.newText("Continue On", 0, 0, native.systemFont, 16)
 	textToAdvance.x = zone.x
 	textToAdvance.y = zone.y
-	textToAdvance.isVisible = false
-	
-	masterGroup:insert(foreground)
-	masterGroup:insert(launchPadLeftBottom)
-	masterGroup:insert(launchPadRightBottom)
-	masterGroup:insert(padTopLeft)
-	masterGroup:insert(padTopRight)
+    textToAdvance.isVisible = false
 
 	dashboardGroup:insert(dashboard)
 	dashboardGroup:insert(scoreText)
@@ -233,14 +220,12 @@ function scene:create( event )
 	squaresTopRightArray = createSquares("top right", 10)
 	
 	sceneGroup:insert(foreground)
-	sceneGroup:insert(masterGroup)
-	--sceneGroup:insert(launchPadLeftBottom)
-	--sceneGroup:insert(launchPadRightBottom)
-	--sceneGroup:insert(padTopLeft)
-	--sceneGroup:insert(padTopRight)
+	sceneGroup:insert(launchPadLeftBottom)
+	sceneGroup:insert(launchPadRightBottom)
+	sceneGroup:insert(padTopLeft)
+	sceneGroup:insert(padTopRight)
 	sceneGroup:insert(dashboard)	
 	sceneGroup:insert(dashboardGroup)
-
 
 	function cleanUpSmoke()
 		animSmoke.isVisible = false 
@@ -256,7 +241,6 @@ function scene:create( event )
 		animSmoke.y = clayPigeon1.y
 		animSmoke:setSequence("explode")
 		animSmoke:play()
-		masterGroup:insert(animSmoke)
 		timer.performWithDelay(400, cleanUpSmoke, 1)
 		audio.play(soundTable["explosionSound"])
 		audio.stop(launcherChannel1)
@@ -280,7 +264,6 @@ function scene:create( event )
 		  animSmoke.y = clayPigeon2.y
 		  animSmoke:setSequence("explode")
 		  animSmoke:play()
-		  masterGroup:insert(animSmoke)
 		  timer.performWithDelay(400, cleanUpSmoke, 1)
 		  audio.play(soundTable["explosionSound"])
 		  audio.stop(launcherChannel2)
@@ -294,45 +277,26 @@ function scene:create( event )
 		end
 	  end
 		
-	function reduceScale(  )
-	  local reduceScaleBy = 0.20
+	function reduceScale( reduceScaleBy )
 	  local count = 0 
 	  local scaleStart = 1.0
-	  local correctScaleFactor = scaleFactor
+	  local divideSpeedBy = 20
 
-	  if(speed > 5000) then
-		scaleTimes = 10 
-		reduceScaleBy = 0.15
-		correctScaleFactor = scaleFactor
-	  else 
-		scaleTimes = 0.20
-	  end 
-
-	  if(speed < 3000 and speed > 2000) then 
-		reduceScaleBy = 0.30
-	  end 
+	  if(scaleFactor < 600) then 
+		divideSpeedBy = 10
+	  end
 
 	  return function()
-		count = count + (speed / 20)
-
-		if(count > correctScaleFactor) then 
+		count = count + (speed / divideSpeedBy)
+		if(count > scaleFactor) then 
 			audio.stop(launcherChannel1)
 			audio.stop(launcherChannel2)
 		end
-		
 		scaleStart = scaleStart - reduceScaleBy
-		if(scaleStart < 0.10) then 
-			clayPigeon1.xScale = 0.10
-			clayPigeon1.yScale = 0.10
-			clayPigeon2.xScale = 0.10
-			clayPigeon2.yScale = 0.10
-		else 
-			clayPigeon1.xScale = scaleStart
-			clayPigeon1.yScale = scaleStart
-			clayPigeon2.xScale = scaleStart
-			clayPigeon2.yScale = scaleStart
-		end
-		
+		clayPigeon1.xScale = scaleStart
+		clayPigeon1.yScale = scaleStart
+		clayPigeon2.xScale = scaleStart
+		clayPigeon2.yScale = scaleStart
 	  end
 	end
 		
@@ -382,15 +346,19 @@ function scene:create( event )
 		end
 	
 		if(launchComplete) then 
-			clayPigeon1.xScale = 1 
-			clayPigeon1.yScale = 1
-			clayPigeon2.xScale = 1
-			clayPigeon2.yScale = 1
-			projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(), scaleTimes)
+			--print ("clayPigeon1 launched")
+			projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(0.20), math.ceil(amountOfClayPigeons/2))
 			launcher1 = audio.loadStream("launcher.wav")
 			launcher2 = audio.loadStream("launcher.wav")
 			launcherChannel1 = audio.play(launcher1, {channel = 1})
 			launcherChannel2 = audio.play(launcher2, {channel = 2})
+
+			clayPigeon1.xScale = 1 
+			clayPigeon1.yScale = 1
+			clayPigeon2.xScale = 1
+			clayPigeon2.yScale = 1
+	
+	
 		end 
 	
 		local params1 = {
@@ -425,6 +393,11 @@ function scene:create( event )
 		end
 
 		if(levelExpireTimeSeconds == event.count) then 
+			if(rawScore < advance) then 
+			  composer.gotoScene("intermediate", option)
+			  _G.score = 0
+			  return 
+		    end 
 			zone.isVisible = true
 			textToAdvance.isVisible = true 
 			zone:addEventListener("tap", zoneHandler)
@@ -439,27 +412,20 @@ function scene:create( event )
 	--determines what happens in terms of speed and what not
 	function stageDeterminer()
 		if(stage == 1) then 
-			speed = 7500
-		elseif(stage == 2) then
-			speed = 7500
-		elseif(stage == 3) then
-			speed = 6000
-		elseif(stage == 4) then
-			speed = 5500
-		elseif(stage == 5) then
 			speed = 4000
-		elseif(stage == 6) then
+		elseif(stage == 2) then
 			speed = 3500
-		elseif(stage == 7) then
+		elseif(stage == 3) then
 			speed = 3000
-		elseif(stage == 8) then
+		elseif(stage == 4) then
 			speed = 2500
-		elseif(stage == 9) then
+		elseif(stage == 5) then
 			speed = 2000
-		elseif(stage == 10) then
+		elseif(stage == 6) then
 			speed = 1500
+		elseif(stage == 7) then
+			speed = 1000
 		end
-		
 	end
 
 	stageDeterminer()
@@ -512,9 +478,6 @@ function scene:destroy( event )
 	clayPigeon1 = nil 
 	clayPigeon2 = nil 
 	rawScore = 0
-
-	--masterGroup:removeSelf()
-    --masterGroup = nil
 	--score = _G.score 
 	-- Called prior to the removal of scene's view ("sceneGroup").
 	-- Insert code here to clean up the scene.
@@ -553,7 +516,7 @@ function checkValid(x,y)
 	  composer.gotoScene("intermediate", option)
 	  clayPigeon1.isVisible = false 
 	  clayPigeon2.isVisible = false
-   end
+	end 
 	 
 	return;
  end

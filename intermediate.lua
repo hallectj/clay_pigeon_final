@@ -40,12 +40,15 @@ function scene:create( event )
     -- button events and initialization
     local function handleTransitionEvent(event)
         if(event.phase=="ended") then
+            composer.removeScene("level1")
             composer.gotoScene("level1", options)
         end
     end
 
     local function handleRestartEvent(event)
         if(event.phase=="ended") then
+            stage = 1
+            composer.removeScene("level1")
             composer.gotoScene("startScreen", options)
         end
     end
@@ -125,6 +128,9 @@ function scene:show( event )
         intermediateText.text = "Game Over!"
         stageNum.text = ""
         button1.isVisible = true
+        composer.removeScene("level1")
+        speedMsg.isVisible = false 
+        
 
       elseif (stage == 11) then
         print("you beat the game")
@@ -132,6 +138,7 @@ function scene:show( event )
         stageNum.text = ""
         button.isVisible = false
         button1.isVisible = true
+        composer.removeScene("level1")
       end
 
    elseif ( phase == "did" ) then

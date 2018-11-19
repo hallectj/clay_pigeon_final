@@ -100,7 +100,7 @@ function scene:show( event )
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
 		rawScore = 0 
-		advance = 6
+		advance = 1
 		speed = 4000
 		clayPigeonIteration = determineIteration()
 
