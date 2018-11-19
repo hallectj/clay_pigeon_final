@@ -10,8 +10,11 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 -- local forward references should go here
 ---------------------------------------------------------------------------------
 local dashboardGroup = display.newGroup()
+local masterGroup = display.newGroup()
+
 local transition = false
 local zone
+_G.ranLevelOneOnceAtLeast = false 
 
 local LENGTH = 10
 local scoreText
@@ -97,6 +100,7 @@ function createSquares(orientation)
 		square.xPos = square.x 
 		square.alpha = 0.01;
 		table.insert(squaresArry, square)
+		masterGroup:insert(square)
 	end
 	return squaresArry
 end
@@ -151,6 +155,7 @@ end
 
 -- "scene:create()"
 function scene:create( event )
+	intoLevelOneAtLeast = true 
 	local sceneGroup = self.view
 
 	smoke_opt = {
@@ -171,7 +176,6 @@ function scene:create( event )
 	}
 
 	sheet = graphics.newImageSheet("smoke.png", smoke_opt);
-
 
 	foreground = display.newImage("foreground.png")
 	foreground.width = 640
@@ -194,6 +198,11 @@ function scene:create( event )
 	stageText.text = "Level " .. stage
 	stageText:setFillColor(0.30, 0.95, 0.45)
 	stageText.strokeWidth = 5 
+
+	masterGroup:insert(launchPadLeftBottom)
+	masterGroup:insert(launchPadRightBottom)
+	masterGroup:insert(padTopLeft)
+	masterGroup:insert(padTopRight)
 
 	populateDashoardCircles()
 
@@ -220,10 +229,11 @@ function scene:create( event )
 	squaresTopRightArray = createSquares("top right", 10)
 	
 	sceneGroup:insert(foreground)
-	sceneGroup:insert(launchPadLeftBottom)
-	sceneGroup:insert(launchPadRightBottom)
-	sceneGroup:insert(padTopLeft)
-	sceneGroup:insert(padTopRight)
+	--sceneGroup:insert(launchPadLeftBottom)
+	--sceneGroup:insert(launchPadRightBottom)
+	--sceneGroup:insert(padTopLeft)
+	--sceneGroup:insert(padTopRight)
+	sceneGroup:insert(masterGroup)
 	sceneGroup:insert(dashboard)	
 	sceneGroup:insert(dashboardGroup)
 
@@ -357,6 +367,9 @@ function scene:create( event )
 			clayPigeon1.yScale = 1
 			clayPigeon2.xScale = 1
 			clayPigeon2.yScale = 1
+
+			--need this in case the player loses the first level
+			_G.ranLevelOneOnceAtLeast = true 
 	
 	
 		end 
@@ -393,9 +406,10 @@ function scene:create( event )
 		end
 
 		if(levelExpireTimeSeconds == event.count) then 
-			if(rawScore < advance) then 
+			if(rawScore <= advance) then 
 			  composer.gotoScene("intermediate", option)
-			  _G.score = 0
+			  zone.isVisible = false 
+			  _G.score = 0 
 			  return 
 		    end 
 			zone.isVisible = true
@@ -478,6 +492,12 @@ function scene:destroy( event )
 	clayPigeon1 = nil 
 	clayPigeon2 = nil 
 	rawScore = 0
+
+	dashboardGroup:removeSelf()
+	dashboardGroup = nil 
+
+	masterGroup:removeSelf()
+	masterGroup = nil
 	--score = _G.score 
 	-- Called prior to the removal of scene's view ("sceneGroup").
 	-- Insert code here to clean up the scene.

@@ -113,23 +113,26 @@ function scene:show( event )
         button1.isVisible = false
         intermediateText.text = "Stage  "
         stageNum.text = stage
+        print("I PRINTED")
         timer.performWithDelay(3000, listener);
+        
 
       elseif (stage > 1 and rawScore > advance and stage < 11) then
         intermediateText.text = "Stage  "
         stageNum.text = stage
         button.isVisible = true
         composer.removeScene("level1")
+
         
       
-      elseif (rawScore < advance) then
+      elseif (rawScore <= advance) then
         print("you lost the game")
         button.isVisible = false
         intermediateText.text = "Game Over!"
         stageNum.text = ""
         button1.isVisible = true
         composer.removeScene("level1")
-        speedMsg.isVisible = false 
+        --speedMsg.isVisible = false 
         
 
       elseif (stage == 11) then
