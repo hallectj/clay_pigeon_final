@@ -15,6 +15,21 @@ _G.score = 0
 _G.stage = 1
 stage = _G.stage 
 
+
+function determineIteration()
+	local iter = 1000
+	if(stage == 1 or stage == 2) then 
+		iter = 10000
+	elseif(stage == 3 or stage == 4 or stage == 5) then 
+		iter = 8000
+	elseif(stage == 6 or stage == 7 or stage == 8) then
+		iter = 6000
+	else
+		iter = 5000
+	end
+	return iter 
+end
+
 -- next scene
 local function levelEventListener( event )
    local myParams = {
@@ -87,8 +102,7 @@ function scene:show( event )
 		rawScore = 0 
 		advance = 6
 		speed = 4000
-		clayPigeonIteration = 8000
-
+		clayPigeonIteration = determineIteration()
 
 	elseif ( phase == "did" ) then
 		-- Called when the scene is now on screen.
