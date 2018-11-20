@@ -13,8 +13,7 @@ local dashboardGroup = display.newGroup()
 local masterGroup = display.newGroup()
 
 local transition = false
-local zone
-_G.ranLevelOneOnceAtLeast = false 
+local zone 
 
 local LENGTH = 10
 local scoreText
@@ -63,6 +62,16 @@ local squaresTopRightArray;
 local option = {
   effect = "fade",
   time = 1300,
+}
+
+local launcher1Options = {
+    channel = 1,
+    duration = speed
+}
+
+local launcher2Options = {
+    channel = 2,
+    duration = speed
 }
 
 local soundTable = {
@@ -143,18 +152,20 @@ function readyBoxTextFunc()
 	physics.start()
 	physics.setGravity(0, 0)
 	
-	readyBoxText = display.newText("Get Ready Level " .. stage, 0, 0, native.systemFont, 24)
-	readyBoxText.x = 100
+	readyBoxText = display.newText("You must shoot " .. advance+1 .. " clay pigeons to advance ", 0, 0, native.systemFont, 24)
+	readyBoxText.x = 10
 	readyBoxText.y = 100
 	readyBoxText:setFillColor(0.25, 0.25, 0.10)
 	
 	physics.addBody(readyBoxText, "")
 	readyBoxText.linearDamping = 0
-	readyBoxText:applyForce(20.7,0.2,readyBoxText.x,readyBoxText.y);
+	readyBoxText:applyForce(45.0,0.2,readyBoxText.x,readyBoxText.y);
 end
 
 -- "scene:create()"
 function scene:create( event )
+	_G.levelFlag = true 
+
 	intoLevelOneAtLeast = true 
 	local sceneGroup = self.view
 
@@ -238,7 +249,9 @@ function scene:create( event )
 	sceneGroup:insert(dashboardGroup)
 
 	function cleanUpSmoke()
-		animSmoke.isVisible = false 
+		animSmoke.isVisible = false
+		--animSmoke:removeSelf()
+		--animSmoke = nil 
 	end
 	
 	function onTouchEventClay1(event) 
@@ -249,6 +262,7 @@ function scene:create( event )
 		animSmoke.isVisible = true 
 		animSmoke.x = clayPigeon1.x 
 		animSmoke.y = clayPigeon1.y
+		masterGroup:insert(animSmoke)
 		animSmoke:setSequence("explode")
 		animSmoke:play()
 		timer.performWithDelay(400, cleanUpSmoke, 1)
@@ -272,6 +286,7 @@ function scene:create( event )
 		  animSmoke.isVisible = true 
 		  animSmoke.x = clayPigeon2.x 
 		  animSmoke.y = clayPigeon2.y
+		  masterGroup:insert(animSmoke)
 		  animSmoke:setSequence("explode")
 		  animSmoke:play()
 		  timer.performWithDelay(400, cleanUpSmoke, 1)
@@ -283,25 +298,17 @@ function scene:create( event )
 			if(bottomHalfArr[i].identifier == clayPigeon2.identifier) then 
 				bottomHalfArr[i]:setFillColor(1, 0, 0)
 			end
-		end
+		  end
 		end
 	  end
 		
-	function reduceScale( reduceScaleBy )
+	function reduceScale(  )
+	  local reduceScaleBy = 0.20
 	  local count = 0 
 	  local scaleStart = 1.0
-	  local divideSpeedBy = 20
-
-	  if(scaleFactor < 600) then 
-		divideSpeedBy = 10
-	  end
+	  --local divideSpeedBy = 20
 
 	  return function()
-		count = count + (speed / divideSpeedBy)
-		if(count > scaleFactor) then 
-			audio.stop(launcherChannel1)
-			audio.stop(launcherChannel2)
-		end
 		scaleStart = scaleStart - reduceScaleBy
 		clayPigeon1.xScale = scaleStart
 		clayPigeon1.yScale = scaleStart
@@ -357,21 +364,20 @@ function scene:create( event )
 	
 		if(launchComplete) then 
 			--print ("clayPigeon1 launched")
-			projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(0.20), math.ceil(amountOfClayPigeons/2))
+			projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(), math.ceil(amountOfClayPigeons/2))
 			launcher1 = audio.loadStream("launcher.wav")
 			launcher2 = audio.loadStream("launcher.wav")
-			launcherChannel1 = audio.play(launcher1, {channel = 1})
-			launcherChannel2 = audio.play(launcher2, {channel = 2})
+			launcherChannel1 = audio.play(launcher1, launcher1Options)
+			launcherChannel2 = audio.play(launcher2, launcher2Options)
+
+			--launcherChannel1 = audio.play(launcher1, {channel = 1})
+			--launcherChannel2 = audio.play(launcher2, {channel = 2})
 
 			clayPigeon1.xScale = 1 
 			clayPigeon1.yScale = 1
 			clayPigeon2.xScale = 1
 			clayPigeon2.yScale = 1
 
-			--need this in case the player loses the first level
-			_G.ranLevelOneOnceAtLeast = true 
-	
-	
 		end 
 	
 		local params1 = {
@@ -424,21 +430,30 @@ function scene:create( event )
 	theTimer = timer.performWithDelay(1000, timerFunc, levelExpireTimeSeconds)
 	
 	--determines what happens in terms of speed and what not
-	function stageDeterminer()
+	function stageDeterminer() 
 		if(stage == 1) then 
-			speed = 4000
+			speed = 5000
 		elseif(stage == 2) then
-			speed = 3500
+			speed = 4500
+			advance = 7
 		elseif(stage == 3) then
-			speed = 3000
+			speed = 4000
+			advance = 9
 		elseif(stage == 4) then
-			speed = 2500
+			speed = 3500
+			advance = 11
 		elseif(stage == 5) then
-			speed = 2000
+			speed = 3000
+			advance = 13
 		elseif(stage == 6) then
-			speed = 1500
+			speed = 2500
+			advance = 13 
 		elseif(stage == 7) then
-			speed = 1000
+			speed = 2000
+			advance = 13
+		elseif(stage == 8) then 
+			speed = 1500 
+			advance = 13
 		end
 	end
 
@@ -492,6 +507,7 @@ function scene:destroy( event )
 	clayPigeon1 = nil 
 	clayPigeon2 = nil 
 	rawScore = 0
+	advance = 5
 
 	dashboardGroup:removeSelf()
 	dashboardGroup = nil 

@@ -17,12 +17,13 @@ local listener
 local button
 local button1
 local options
-local speedMsg 
+local speedMsg
+_G.levelFlag = false  
+_G.FINALLEVEL = 8
 
 
 -- "scene:create()"
 function scene:create( event )
- 
    local sceneGroup = self.view
  
    -- Initialize the scene here.
@@ -32,6 +33,7 @@ function scene:create( event )
    stageNum.text = stage
    intermediateText = display.newText( "Stage  " .. " ", display.contentCenterX, display.contentCenterY, native.systemFont, 48)
    speedMsg = display.newText( "Speed increases after every level ", display.contentCenterX+40, 225, native.systemFont, 32)
+   speedMsg.isVisible = false 
 
    options = {
       effect = "fade",
@@ -109,39 +111,52 @@ function scene:show( event )
    if ( phase == "will" ) then
       -- Called when the scene is still off screen (but is about to come on screen).
       -- the various conditons for the intermidate stage 
-      if (stage == 1) then
+      if (stage == 1 and _G.levelFlag == false) then
+        speedMsg.isVisible = true 
         button1.isVisible = false
         intermediateText.text = "Stage  "
         stageNum.text = stage
         print("I PRINTED")
         timer.performWithDelay(3000, listener);
-        
 
-      elseif (stage > 1 and rawScore > advance and stage < 11) then
-        intermediateText.text = "Stage  "
-        stageNum.text = stage
-        button.isVisible = true
-        composer.removeScene("level1")
-
-        
-      
-      elseif (rawScore <= advance) then
+      elseif(stage == 1 and _G.levelFlag == true and rawScore < advance) then 
+        speedMsg.isVisible = false 
         print("you lost the game")
         button.isVisible = false
         intermediateText.text = "Game Over!"
         stageNum.text = ""
         button1.isVisible = true
         composer.removeScene("level1")
-        --speedMsg.isVisible = false 
+        _G.levelFlag = false 
         
 
-      elseif (stage == 11) then
+      elseif (stage > 1 and rawScore > advance and stage < _G.FINALLEVEL) then
+        speedMsg.isVisible = true 
+        intermediateText.text = "Stage  "
+        stageNum.text = stage
+        button.isVisible = true
+        composer.removeScene("level1")
+        _G.levelFlag = false 
+      
+      elseif (rawScore <= advance) then
+        speedMsg.isVisible = false 
+        print("you lost the game")
+        button.isVisible = false
+        intermediateText.text = "Game Over!"
+        stageNum.text = ""
+        button1.isVisible = true
+        composer.removeScene("level1")
+        _G.levelFlag = false 
+
+      elseif (stage == _G.FINALLEVEL) then
+        speedMsg.isVisible = false 
         print("you beat the game")
         intermediateText.text = "You Win!"
         stageNum.text = ""
         button.isVisible = false
         button1.isVisible = true
         composer.removeScene("level1")
+        _G.levelFlag = false 
       end
 
    elseif ( phase == "did" ) then
@@ -172,6 +187,7 @@ end
 function scene:destroy( event )
  
    local sceneGroup = self.view
+   speedMsg.isVisible = true 
  
    -- Called prior to the removal of scene's view ("sceneGroup").
    -- Insert code here to clean up the scene.

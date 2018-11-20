@@ -37,7 +37,7 @@ local function levelEventListener( event )
       param2 = "param2"
    }
 
-   
+   composer.removeScene("intermediate")   
    composer.gotoScene("level1", {effect="fade", time=500, params=myParams })
 end
 
@@ -100,7 +100,7 @@ function scene:show( event )
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
 		rawScore = 0 
-		advance = 1
+		advance = 5
 		speed = 4000
 		clayPigeonIteration = determineIteration()
 
