@@ -1,3 +1,9 @@
+--Travis Halleck and Jackson Lawrence
+--CS 371 Mobile Computing App Final Project
+
+--Trajectory comes from the dmc-trajectory library.  This library is needed for parabolic curves only
+--everything else is customized by us
+
 local composer = require( "composer" )
 local physics = require ("physics")
 local scene = composer.newScene()
@@ -9,42 +15,59 @@ local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc
 
 -- local forward references should go here
 ---------------------------------------------------------------------------------
+--I decided to put everything in groups so I can destroy them when intermediate scene is called.
+--without the groups, phantom objects remain.
+
 local dashboardGroup = display.newGroup()
 local masterGroup = display.newGroup()
 
 local transition = false
 local zone 
 
+--LENGTH is the number of squares I create for source and destination points for parabolic curves
 local LENGTH = 10
 local scoreText
 local stageText
 
+--launcher1 and launcher 2 are the audio assets for when the clay pigeon is launched.
 local launcher1 
 local launcher2
 local launcherChannel	
 local launcherChannel2
 
+--smoke sprite for when player touches the clay pigeon
 local sheet
 local smoke_opt
 local smoke_seq
 local animSmoke
 
+--arrays that hold the squares
 local topHalfArr, bottomHalfArr = {}, {}
 
 local foreground
 local clayPigeon1 = nil
 local clayPigeon2 = nil 
+
+--launchComplete is needed so I know when to begin iterations and audio
 local launchComplete = true 
 
+--Used to identify which clay pigeon is what, used later
 local clay1ID = 0
 local clay2ID = 0
+
+--dashboard at bottom of screen that has scores and number of clay pigeons touched
 local dashboard
 
+--amount of clay pigeons per side.  10 on left and 10 on right
 local amountOfClayPigeons = 10
+
+--scaleFactor is used so I know how long a clay pigeon launch should be in order for xScale and yScale to work properly later
 local scaleFactor = (speed / ((amountOfClayPigeons/2) * 100)) * 100
+
+--this is used to say when the stage is over, so the timer can know
 local levelExpireTimeSeconds = ((amountOfClayPigeons * clayPigeonIteration) + (clayPigeonIteration - math.floor((clayPigeonIteration/2)))) / 1000
 
-
+--launchpads are only there to house the invisible squares to help me visualize souce and destination points
 local launchPadLeft
 local launchPadRight
 local padTopLeft 
@@ -54,6 +77,9 @@ local squareHt = 10
 local squareWd = 10
 local textToAdvance
 
+--So after creating squares, I use the x cordinate of each square to launch to.  I need these arrays 
+--so I can pick a random square from them.  Basically top left is mapped to bottom right and top right
+--is mapped to bottom left, see function for code
 local squaresBottomLeftArray;
 local squaresBottomRightArray;
 local squaresTopLeftArray;
@@ -79,6 +105,8 @@ local soundTable = {
 	launcherSound = audio.loadSound("launcher.wav")
 }
 
+--This gives me the squares for the invisible launch pads so I can tell Trajectory.move where to 
+--launch to.  Orientation is given so I can easily place them on the launch pads
 function createSquares(orientation) 
 	local blue = { 0.25, 0.25, 0.75 }
     local gray = { 0.50, 0.50, 0.50 }
@@ -114,6 +142,8 @@ function createSquares(orientation)
 	return squaresArry
 end
 
+--selects random square from the 4 square arrays.  Needed so I can launch to a random square
+--10 total on each orientation, to help with mapping
 function selectRandomSquare(arr)
 	local len = table.getn(arr)
     local randSquare = arr[1] 
@@ -123,6 +153,9 @@ function selectRandomSquare(arr)
 	return randSquare;
 end 
 
+--popluate dashboard circles, creates circles that identify which clay pigeon was touched.
+--top represents left clay pigeons and bottom represents bottom clay pigeons.  As the user 
+--touches the clay pigeon, the circle will fill with red indicating a hit.  
 function populateDashoardCircles()
 	local upperHalfY = 280
 	local lowerHalfY = 300
@@ -144,10 +177,11 @@ function populateDashoardCircles()
 
 		dashboardGroup:insert(circle1)
 		dashboardGroup:insert(circle2)
-
 	end
 end
 
+--This function creates a text that lets the user know how many clay pigeons he or she must touch
+--to advance to the next stage.  This acts as a marquee really.
 function readyBoxTextFunc() 
 	physics.start()
 	physics.setGravity(0, 0)
@@ -169,6 +203,7 @@ function scene:create( event )
 	intoLevelOneAtLeast = true 
 	local sceneGroup = self.view
 
+	--smoke frames, so as the user taps the clay pigeon, smoke animation plays out
 	smoke_opt = {
 		frames = {
 			{x = 0, y = 0, width = 15, height = 15},
@@ -240,10 +275,6 @@ function scene:create( event )
 	squaresTopRightArray = createSquares("top right", 10)
 	
 	sceneGroup:insert(foreground)
-	--sceneGroup:insert(launchPadLeftBottom)
-	--sceneGroup:insert(launchPadRightBottom)
-	--sceneGroup:insert(padTopLeft)
-	--sceneGroup:insert(padTopRight)
 	sceneGroup:insert(masterGroup)
 	sceneGroup:insert(dashboard)	
 	sceneGroup:insert(dashboardGroup)
@@ -254,6 +285,9 @@ function scene:create( event )
 		--animSmoke = nil 
 	end
 	
+	--on touch, raw score goes up, smoke animation plays as well as poof animation
+	--score gets updates and displayed also the corresponding circle on the dashboard
+	--gets filled with red letting the user know which clay pigeon they hit.
 	function onTouchEventClay1(event) 
 	  if(event.phase == "began") then 
 		rawScore = rawScore + 1
@@ -302,6 +336,8 @@ function scene:create( event )
 		end
 	  end
 		
+	--reduceScale returns a function so the child anomynous function has what the parent has
+	--in order to properly scale the clay pigeons while they get resetted when needed.
 	function reduceScale(  )
 	  local reduceScaleBy = 0.20
 	  local count = 0 
@@ -317,6 +353,7 @@ function scene:create( event )
 	  end
 	end
 		
+	--create the actual clay pigeon, set the touch listeners
     function setupTransition()	
 		clayPigeon1 = display.newCircle( 0, 0, 25 )
 		clayPigeon1.x, clayPigeon1.y = 1000, -1100
@@ -333,18 +370,17 @@ function scene:create( event )
 		clayPigeon2.name = "clay pigeon2"
 		clayPigeon2:addEventListener("touch", onTouchEventClay2)
 		clayPigeon2.isVisible = false
-	
 	end
 	
 	
 	function doTransition()
-	
 		clay1ID = clay1ID + 1
 		clay2ID = clay2ID + 1
 		local heightArr = {60, 80, 100, 120, 140, 150}
 		local randHeight = 0 
 		local len = table.getn(heightArr)
 		for i = 1, len do 
+			-- heights are the heights of the curve, to further randomize the clay pigeon motion
 			randHeight = heightArr[math.random(1, len)]
 			randHeight2 = heightArr[math.random(1, len)]
 		end 
@@ -370,9 +406,7 @@ function scene:create( event )
 			launcherChannel1 = audio.play(launcher1, launcher1Options)
 			launcherChannel2 = audio.play(launcher2, launcher2Options)
 
-			--launcherChannel1 = audio.play(launcher1, {channel = 1})
-			--launcherChannel2 = audio.play(launcher2, {channel = 2})
-
+			--reset scale of clay pigeons, otherwise clay pigeon scales get wonky
 			clayPigeon1.xScale = 1 
 			clayPigeon1.yScale = 1
 			clayPigeon2.xScale = 1
@@ -380,6 +414,7 @@ function scene:create( event )
 
 		end 
 	
+
 		local params1 = {
 			time = speed,
 			pBegin= {selectRandomSquare(squaresBottomLeftArray).x, selectRandomSquare(squaresBottomLeftArray).y},
@@ -395,7 +430,6 @@ function scene:create( event )
 			height= randHeight2,
 			onComplete=onCompleteCallback		
 		}
-	
 	
 		Trajectory.move( clayPigeon1, params1 )
 		Trajectory.move( clayPigeon2, params2 )

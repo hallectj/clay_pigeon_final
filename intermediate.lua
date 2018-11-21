@@ -1,3 +1,11 @@
+--Travis Halleck and Jackson Lawrence
+--CS 371 Mobile Computing App Final Project
+
+--The intermediate scene simply manages what to each level
+--should do in terms of speed and clay pigeon iterations
+--this file also manages start and gameover screens
+
+
 local composer = require( "composer" )
 local widget = require("widget")
 local scene = composer.newScene()
@@ -39,7 +47,8 @@ function scene:create( event )
       effect = "fade",
       time = 500,
    }
-    -- button events and initialization
+    -- button events and initialization.  This event handler handles normal
+    -- transitions from stage to stage
     local function handleTransitionEvent(event)
         if(event.phase=="ended") then
             composer.removeScene("level1")
@@ -47,6 +56,7 @@ function scene:create( event )
         end
     end
 
+    -- This event handler handles for any game over or if player wins the whole game
     local function handleRestartEvent(event)
         if(event.phase=="ended") then
             stage = 1
@@ -55,6 +65,7 @@ function scene:create( event )
         end
     end
 
+    -- button is for normal transitions, stage to stage
     button = widget.newButton(
 		{
 			x = display.contentCenterX,
@@ -70,6 +81,7 @@ function scene:create( event )
 		}
   )
   
+  --button1 is for restart transitions, game overs and winning entire game
   button1 = widget.newButton(
 		{
 			x = display.contentCenterX,
@@ -94,6 +106,7 @@ function scene:create( event )
    button.isVisible = false
    button1.isVisible = false
    
+  
    function listener( event )
      composer.gotoScene("level1", options)
    end
@@ -108,6 +121,11 @@ function scene:show( event )
    local sceneGroup = self.view
    local phase = event.phase
  
+   --if the level flag tells me if the player at least made it to the level one screen
+   --that way I can check raw score without worring about the initial zero raw score
+   --without that flag, it would game over as soon as intermediate.lua loads.
+
+
    if ( phase == "will" ) then
       -- Called when the scene is still off screen (but is about to come on screen).
       -- the various conditons for the intermidate stage 
@@ -116,9 +134,9 @@ function scene:show( event )
         button1.isVisible = false
         intermediateText.text = "Stage  "
         stageNum.text = stage
-        print("I PRINTED")
         timer.performWithDelay(3000, listener);
 
+      --I use compuser.removeScene() that way the destroy method will recreate create each time
       elseif(stage == 1 and _G.levelFlag == true and rawScore < advance) then 
         speedMsg.isVisible = false 
         print("you lost the game")

@@ -1,3 +1,6 @@
+--Travis Halleck and Jackson Lawrence
+--CS 371 Mobile Computing App Final Project
+
 local composer = require( "composer" )
 local scene = composer.newScene()
 local widget = require("widget")
@@ -15,7 +18,8 @@ _G.score = 0
 _G.stage = 1
 stage = _G.stage 
 
-
+--This function is for convience, instead of waiting 10 seconds every time, for clay pigeon, the 
+--clay pigeons spawn faster when speed is faster to prevent unneccessary waiting.
 function determineIteration()
 	local iter = 1000
 	if(stage == 1 or stage == 2) then 
@@ -31,27 +35,26 @@ function determineIteration()
 end
 
 -- next scene
-local function levelEventListener( event )
-   local myParams = {
-      param1 = "param1",
-      param2 = "param2"
-   }
+--local function levelEventListener( event )
+   --local myParams = {
+      --param1 = "param1",
+      --param2 = "param2"
+   --}
 
-   composer.removeScene("intermediate")   
-   composer.gotoScene("level1", {effect="fade", time=500, params=myParams })
-end
+   --composer.removeScene("intermediate")   
+   --composer.gotoScene("level1", {effect="fade", time=500, params=myParams })
+--end
 
 -- "scene:create()"
 function scene:create( event )
 	local sceneGroup = self.view
 	startScreen = display.newImage("startScreen1.png")
-	--startText = display.newText( "START", display.contentCenterX+74, display.contentCenterY-10, native.systemFont, 28 )
-	--startText:setFillColor( 1, 1, 0 )
 	startScreen.width = 640
 	startScreen.height = 320
 	startScreen.anchorX = 0
 	startScreen.anchorY = 0
 
+	--Travis Halleck and Jackson Lawrence Programmers for Clay Pigeon Shooter
 	local NameText = display.newText("Travis Halleck", 320, 250)
 	local NameText2 = display.newText("Jackson Lawrence", 320, 275)
 
@@ -63,6 +66,8 @@ function scene:create( event )
 		time = 800
 	}
 
+	--Simple scene event handler after user presses start button which takes 
+	--the player to the intermediate screen
 	local function sceneListener(event)
         if(event.phase=="ended") then
             composer.gotoScene("intermediate",options)
@@ -99,6 +104,9 @@ function scene:show( event )
 	local phase = event.phase
 	if ( phase == "will" ) then
 		-- Called when the scene is still off screen (but is about to come on screen).
+		--raw score is the actual clay pigeons destroyed, this does not take into account
+		--any score penalities, nor should it.  advance is what is needed to proceed to next 
+		--level
 		rawScore = 0 
 		advance = 5
 		speed = 4000
