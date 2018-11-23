@@ -8,6 +8,11 @@ local composer = require( "composer" )
 local physics = require ("physics")
 local scene = composer.newScene()
 local Trajectory = require( "dmc_trajectory.DMC-trajectory-basic.dmc_library.dmc_trajectory" )
+
+--To satisfy the oop requirements of the project
+local claypigeon = require( "ClayPigeon" )
+
+
 ---------------------------------------------------------------------------------
 -- All code outside of the listener functions will only be executed ONCE
 -- unless "composer.removeScene()" is called.
@@ -46,7 +51,8 @@ local topHalfArr, bottomHalfArr = {}, {}
 
 local foreground
 local clayPigeon1 = nil
-local clayPigeon2 = nil 
+local clayPigeon2 = nil
+
 
 --launchComplete is needed so I know when to begin iterations and audio
 local launchComplete = true 
@@ -203,26 +209,6 @@ function scene:create( event )
 	intoLevelOneAtLeast = true 
 	local sceneGroup = self.view
 
-	--smoke frames, so as the user taps the clay pigeon, smoke animation plays out
-	smoke_opt = {
-		frames = {
-			{x = 0, y = 0, width = 15, height = 15},
-			{x = 18, y = 0, width = 15, height = 15},
-			{x = 35, y = 0, width = 15, height = 15},
-			{x = 50, y = 0, width = 15, height = 15},
-			{x = 0, y = 16, width = 15, height = 15},
-			{x = 18, y = 16, width = 15, height = 15},
-			{x = 35, y = 16, width = 15, height = 15},
-			{x = 50, y = 16, width = 15, height = 15}
-		}
-	}
-
-	smoke_seq = {
-	    {name = "explode", frames = { 1, 2, 3, 4, 5, 6, 7, 8}, time = 250, loopCount = 1}
-	}
-
-	sheet = graphics.newImageSheet("smoke.png", smoke_opt);
-
 	foreground = display.newImage("foreground.png")
 	foreground.width = 640
 	foreground.height = 320
@@ -278,29 +264,18 @@ function scene:create( event )
 	sceneGroup:insert(masterGroup)
 	sceneGroup:insert(dashboard)	
 	sceneGroup:insert(dashboardGroup)
-
-	function cleanUpSmoke()
-		animSmoke.isVisible = false
-		--animSmoke:removeSelf()
-		--animSmoke = nil 
-	end
 	
 	--on touch, raw score goes up, smoke animation plays as well as poof animation
 	--score gets updates and displayed also the corresponding circle on the dashboard
 	--gets filled with red letting the user know which clay pigeon they hit.
+
+
 	function onTouchEventClay1(event) 
 	  if(event.phase == "began") then 
 		rawScore = rawScore + 1
 		clayPigeon1.isVisible = false;
-		animSmoke = display.newSprite (sheet, smoke_seq);
-		animSmoke.isVisible = true 
-		animSmoke.x = clayPigeon1.x 
-		animSmoke.y = clayPigeon1.y
-		masterGroup:insert(animSmoke)
-		animSmoke:setSequence("explode")
-		animSmoke:play()
-		timer.performWithDelay(400, cleanUpSmoke, 1)
-		audio.play(soundTable["explosionSound"])
+		clayPigeon1:animateSmoke()
+
 		audio.stop(launcherChannel1)
 		_G.score = _G.score + 10 
 		scoreText.text = "score " .. _G.score 
@@ -316,15 +291,8 @@ function scene:create( event )
 		if(event.phase == "began") then 
 		  rawScore = rawScore + 1
 		  clayPigeon2.isVisible = false;
-		  animSmoke = display.newSprite (sheet, smoke_seq);
-		  animSmoke.isVisible = true 
-		  animSmoke.x = clayPigeon2.x 
-		  animSmoke.y = clayPigeon2.y
-		  masterGroup:insert(animSmoke)
-		  animSmoke:setSequence("explode")
-		  animSmoke:play()
-		  timer.performWithDelay(400, cleanUpSmoke, 1)
-		  audio.play(soundTable["explosionSound"])
+		  clayPigeon2:animateSmoke()
+
 		  audio.stop(launcherChannel2)
 		  _G.score = _G.score + 10 
 		  scoreText.text = "score " .. _G.score 
@@ -342,7 +310,6 @@ function scene:create( event )
 	  local reduceScaleBy = 0.20
 	  local count = 0 
 	  local scaleStart = 1.0
-	  --local divideSpeedBy = 20
 
 	  return function()
 		scaleStart = scaleStart - reduceScaleBy
@@ -354,22 +321,14 @@ function scene:create( event )
 	end
 		
 	--create the actual clay pigeon, set the touch listeners
-    function setupTransition()	
-		clayPigeon1 = display.newCircle( 0, 0, 25 )
-		clayPigeon1.x, clayPigeon1.y = 1000, -1100
-		clayPigeon1.strokeWidth = 3
-		clayPigeon1:setStrokeColor( 0, 0, 0 )
-		clayPigeon1.name = "clay pigeon1"
+	function setupTransition()	
+		clayPigeon1 = claypigeon:new()
+		clayPigeon1:createPigeon()
 		clayPigeon1:addEventListener("touch", onTouchEventClay1)
-		clayPigeon1.isVisible = false
-	
-		clayPigeon2 = display.newCircle( 0, 0, 25 )
-		clayPigeon2.x, clayPigeon1.y = 1000, -1100
-		clayPigeon2.strokeWidth = 3
-		clayPigeon2:setStrokeColor( 0, 0, 0 )
-		clayPigeon2.name = "clay pigeon2"
+		
+		clayPigeon2 = claypigeon:new()
+		clayPigeon2:createPigeon()
 		clayPigeon2:addEventListener("touch", onTouchEventClay2)
-		clayPigeon2.isVisible = false
 	end
 	
 	
@@ -399,12 +358,13 @@ function scene:create( event )
 		end
 	
 		if(launchComplete) then 
-			--print ("clayPigeon1 launched")
+			print ("clayPigeon1 launched")
 			projectileTimer = timer.performWithDelay(scaleFactor, reduceScale(), math.ceil(amountOfClayPigeons/2))
 			launcher1 = audio.loadStream("launcher.wav")
 			launcher2 = audio.loadStream("launcher.wav")
 			launcherChannel1 = audio.play(launcher1, launcher1Options)
 			launcherChannel2 = audio.play(launcher2, launcher2Options)
+
 
 			--reset scale of clay pigeons, otherwise clay pigeon scales get wonky
 			clayPigeon1.xScale = 1 
@@ -456,8 +416,6 @@ function scene:create( event )
 			textToAdvance.isVisible = true 
 			zone:addEventListener("tap", zoneHandler)
 		end
-
-		print(event.count)
 
 	end
 
@@ -562,24 +520,24 @@ zone.isSensor = true;
 zone.isVisible = false
 
 function zoneHandler(event)
-	local x, y = event.target:contentToLocal(event.x, event.y); 
-	x = x + 150;
-	y = y + 100;
-	x = math.ceil(x/60);
-	y = math.ceil(y/50);
+	--local x, y = event.target:contentToLocal(event.x, event.y); 
+	--x = x + 150;
+	--y = y + 100;
+	--x = math.ceil(x/60);
+	--y = math.ceil(y/50);
 
 	print("Stage is ", stage)
 	print("rawScore is ", rawScore)
 	print("score is", _G.score)
 	print("speed is", speed)
 
-	if (checkValid(x, y)) then
+	if (checkValid()) then
 	  return;
 	end   
 end
 
-function checkValid(x,y) 
-	local _x, _y = zone:localToContent((x*60)-180, (y*50)-125);
+function checkValid() 
+	--local _x, _y = zone:localToContent((x*60)-180, (y*50)-125);
 	if (rawScore > advance) then
 		print("stage is ", stage)
 	  stage = stage + 1
@@ -599,9 +557,6 @@ scene:addEventListener( "create", scene )
 scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
---zone:addEventListener("tap", zoneHandler)
-
---Runtime:addEventListener( "enterFrame", tmp )
 ---------------------------------------------------------------------------------
 
 return scene
