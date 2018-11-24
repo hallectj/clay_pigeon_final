@@ -146,6 +146,7 @@ function scene:show( event )
         button1.isVisible = true
         composer.removeScene("level1")
         _G.levelFlag = false 
+        rawScore = 0
         
 
       elseif (stage > 1 and rawScore > advance and stage < _G.FINALLEVEL) then
@@ -155,6 +156,7 @@ function scene:show( event )
         button.isVisible = true
         composer.removeScene("level1")
         _G.levelFlag = false 
+        rawScore = 0
       
       elseif (rawScore <= advance) then
         speedMsg.isVisible = false 
@@ -165,6 +167,7 @@ function scene:show( event )
         button1.isVisible = true
         composer.removeScene("level1")
         _G.levelFlag = false 
+        rawScore = 0
 
       elseif (stage == _G.FINALLEVEL) then
         speedMsg.isVisible = false 
@@ -175,6 +178,7 @@ function scene:show( event )
         button1.isVisible = true
         composer.removeScene("level1")
         _G.levelFlag = false 
+        rawScore = 0
       end
 
    elseif ( phase == "did" ) then

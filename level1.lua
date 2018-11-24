@@ -13,9 +13,6 @@
 	local claypigeon = require( "ClayPigeon" )
 	
 	local perfectText
-	perfectText = display.newText("AMAZING\nPERFECT ROUND!!!", display.contentCenterX, 100, "Comic Sans MS", 32)
-	perfectText:setFillColor(1, 0, 0)
-	perfectText.isVisible = false
 	
 	--custom event handler, checks if rawScore (number of claypigeons per round is max (perfect))
 	local function onPerfectionHandler(event)
@@ -245,11 +242,16 @@
 		stageText:setFillColor(0.30, 0.95, 0.45)
 		stageText.strokeWidth = 5 
 	
+		perfectText = display.newText("AMAZING\nPERFECT ROUND!!!", display.contentCenterX, 100, "Comic Sans MS", 32)
+		perfectText:setFillColor(1, 0, 0)
+
 		masterGroup:insert(launchPadLeftBottom)
 		masterGroup:insert(launchPadRightBottom)
 		masterGroup:insert(padTopLeft)
 		masterGroup:insert(padTopRight)
-	
+		masterGroup:insert(perfectText)
+
+		perfectText.isVisible = false
 		populateDashoardCircles()
 	
 		scoreText = display.newText("score: " .. _G.score, 410, 290, native.systemFont, 24)
@@ -550,7 +552,6 @@
 		--y = math.ceil(y/50);
 		--Runtime:addEventListener("perfection", onPerfectionHandler)
 	
-		perfectText.isVisible = false 
 		print("Stage is ", stage)
 		print("rawScore is ", rawScore)
 		print("score is", _G.score)
@@ -569,7 +570,10 @@
 		  composer.gotoScene("intermediate", option)
 		  clayPigeon1.isVisible = false 
 		  clayPigeon2.isVisible = false
-		end 
+		  perfectText.isVisible = false 
+		end
+
+		
 		 
 		return;
 	 end
