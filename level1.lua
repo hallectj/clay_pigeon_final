@@ -57,6 +57,12 @@
 	local smoke_seq
 	local animSmoke
 	
+	--duck sprite that is used as an obsticle
+	local duck = nil
+	local duck_sheet
+	local duck_opt
+	local duck_seq
+
 	--arrays that hold the squares
 	local topHalfArr, bottomHalfArr = {}, {}
 	
@@ -219,7 +225,22 @@
 	
 		intoLevelOneAtLeast = true 
 		local sceneGroup = self.view
-	
+
+			--duck frames
+		duck_opt = {
+			frames = {
+    	       { x = 148, y = 22, width = 40, height = 37},
+    	       { x = 191, y= 22, width = 41, height = 37}
+    	   }
+		}
+		
+		duck_seq = {
+			{name = "wingsUp", frames = { 1, 2}, time = 250, loopCount = 1},
+     		{name = "wingsDown", frames = {2, 1}, time = 250, loopCount = 1}
+
+		}
+
+		duck_sheet = graphics.newImageSheet("marioware.png", duck_opt)
 		foreground = display.newImage("foreground.png")
 		foreground.width = 640
 		foreground.height = 320
@@ -370,6 +391,11 @@
 			
 			clayPigeon1.isVisible = true
 			clayPigeon2.isVisible = true
+			duckOdds = math.random(1, 10)
+			if (duckOdds < 6) then
+				print("fly duck")
+				duckFly()
+			end
 			
 			clayPigeon1.identifier = "top " .. clay1ID
 			clayPigeon2.identifier = "bottom " .. clay2ID
@@ -421,6 +447,21 @@
 			launchComplete = false
 		end
 		
+		function duckFly()
+			physics.start()
+			physics.setGravity(0, 0)
+	
+			duck = display.newSprite(duck_sheet, duck_opt)
+   			duck.direction = "right"
+   			duck.isVisible = true
+			duck.x = 25
+			duck.y = 100
+	
+			physics.addBody(duck, {density = 0.2 })
+			duck.linearDamping = 0
+			duck:applyForce(100,0.2,duck.x,duck.y);
+		end
+
 		function launchFunc() 
 			timer.performWithDelay(clayPigeonIteration, doTransition, amountOfClayPigeons)
 		end
