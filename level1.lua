@@ -125,7 +125,8 @@
 	
 	local soundTable = {
 		explosionSound = audio.loadSound("explosion.wav"),
-		launcherSound = audio.loadSound("launcher.wav")
+		launcherSound = audio.loadSound("launcher.wav"),
+		duckFlapping = audio.loadSound("duck_flapping.wav")
 	}
 	
 	--This gives me the squares for the invisible launch pads so I can tell Trajectory.move where to 
@@ -235,9 +236,10 @@
 		}
 		
 		duck_seq = {
-			{name = "wingsUp", frames = { 1, 2}, time = 250, loopCount = 1},
-     		{name = "wingsDown", frames = {2, 1}, time = 250, loopCount = 1}
-
+			name="flapping",
+			frames= { 2, 1 }, -- frame indexes of animation, in image sheet
+			time = 480,
+			loopCount = 0 
 		}
 
 		duck_sheet = graphics.newImageSheet("marioware.png", duck_opt)
@@ -381,9 +383,11 @@
 				if(_G.score <= 50) then 
 					_G.score = 0
 					scoreText.text = "score " .. _G.score
+					audio.play(soundTable["duckFlapping"])
 				else 
 					_G.score = _G.score - 50
 					scoreText.text = "score " .. _G.score
+					audio.play(soundTable["duckFlapping"])
 				end
 			end
 		end
@@ -462,7 +466,7 @@
 			physics.start()
 			physics.setGravity(0, 0)
 	
-			duck = display.newSprite(duck_sheet, duck_opt)
+			duck = display.newSprite(duck_sheet, duck_seq)
    			duck.direction = "right"
    			duck.isVisible = true
 			duck.x = 25
@@ -472,6 +476,8 @@
 			duck.linearDamping = 0
 			duck:applyForce(100,0.2,duck.x,duck.y);
 			duck:addEventListener("touch", duckTouchEvent)
+			duck:setSequence("flapping")
+			duck:play()
 		end
 
 		function launchFunc() 
