@@ -376,6 +376,17 @@
 			clayPigeon2:addEventListener("touch", onTouchEventClay2)
 		end
 		
+		function duckTouchEvent(event) 
+			if(event.phase == "ended") then 
+				if(_G.score <= 50) then 
+					_G.score = 0
+					scoreText.text = "score " .. _G.score
+				else 
+					_G.score = _G.score - 50
+					scoreText.text = "score " .. _G.score
+				end
+			end
+		end
 		
 		function doTransition()
 			clay1ID = clay1ID + 1
@@ -460,6 +471,7 @@
 			physics.addBody(duck, {density = 0.2 })
 			duck.linearDamping = 0
 			duck:applyForce(100,0.2,duck.x,duck.y);
+			duck:addEventListener("touch", duckTouchEvent)
 		end
 
 		function launchFunc() 
