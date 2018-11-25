@@ -415,6 +415,7 @@
 				onComplete=onCompleteCallback		
 			}
 		
+			-- Use the DMC Trajectory library that helps with parabolic curve to a point
 			Trajectory.move( clayPigeon1, params1 )
 			Trajectory.move( clayPigeon2, params2 )
 			launchComplete = false
@@ -448,7 +449,7 @@
 		--determines what happens in terms of speed and what not
 		function stageDeterminer() 
 			if(stage == 1) then 
-				speed = 6500
+				speed = 5000
 			elseif(stage == 2) then
 				speed = 4500
 				advance = 7
@@ -545,13 +546,6 @@
 	zone.isVisible = false
 	
 	function zoneHandler(event)
-		--local x, y = event.target:contentToLocal(event.x, event.y); 
-		--x = x + 150;
-		--y = y + 100;
-		--x = math.ceil(x/60);
-		--y = math.ceil(y/50);
-		--Runtime:addEventListener("perfection", onPerfectionHandler)
-	
 		print("Stage is ", stage)
 		print("rawScore is ", rawScore)
 		print("score is", _G.score)
@@ -563,7 +557,6 @@
 	end
 	
 	function checkValid() 
-		--local _x, _y = zone:localToContent((x*60)-180, (y*50)-125);
 		if (rawScore > advance) then
 			print("stage is ", stage)
 		  stage = stage + 1
@@ -572,9 +565,6 @@
 		  clayPigeon2.isVisible = false
 		  perfectText.isVisible = false 
 		end
-
-		
-		 
 		return;
 	 end
 	
