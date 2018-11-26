@@ -470,7 +470,11 @@
    			duck.direction = "right"
    			duck.isVisible = true
 			duck.x = 25
-			duck.y = 100
+
+			duckYArr = {100, 120, 80}
+			duckY = duckYArr[math.random(1,3)]
+
+			duck.y = duckY
 	
 			physics.addBody(duck, {density = 0.2 })
 			duck.linearDamping = 0
